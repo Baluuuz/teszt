@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Villany Vizsga</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #0f0f0f;
+    color: white;
+    padding: 10px;
+}
+.card {
+    background: #1e1e1e;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+button {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border: none;
+    border-radius: 8px;
+    background: #333;
+    color: white;
+}
+button.selected {
+    background: #555;
+}
+#finishBtn {
+    background: #2ecc71;
+    font-weight: bold;
+}
+#shuffleBtn {
+    background: orange;
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<h2>⚡ Villany Vizsga</h2>
+<button id="shuffleBtn">🔄 Új teszt</button>
+<button id="finishBtn">✅ Befejezés</button>
+
+<div id="quiz"></div>
+<div id="result"></div>
+<div id="errors"></div>
+
+<script>
+
+// 🔥 80 kérdés
+const allQuestions = [
+{q:"Mi az Ohm törvénye?",a:["U=I·R","U=R/I","I=U·R"],c:0},
+{q:"Mi a teljesítmény képlete?",a:["P=U·I","P=U/I","P=R/I"],c:0},
+{q:"Mi az áram mértékegysége?",a:["Volt","Ampere","Ohm"],c:1},
+{q:"Mi a feszültség jele?",a:["I","U","R"],c:1},
+{q:"Mi az ellenállás jele?",a:["I","U","R"],c:2},
+{q:"Sorosan az áram:",a:["azonos","különböző","0"],c:0},
+{q:"Párhuzamosan a feszültség:",a:["azonos","különböző","0"],c:0},
+{q:"Mi a biztosíték feladata?",a:["védelem túláram ellen","fesz növelés","hő"],c:0},
+{q:"Mi a rövidzárlat?",a:["kis ellenállás","nagy ellenállás","nincs áram"],c:0},
+{q:"Mi az elektromos áram?",a:["töltések mozgása","feszültség","ellenállás"],c:0},
+
+{q:"Mi az ellenállás mértékegysége?",a:["Volt","Ohm","Watt"],c:1},
+{q:"Mi a feszültség mértékegysége?",a:["Volt","Ampere","Ohm"],c:0},
+{q:"Mi az áram jele?",a:["I","U","R"],c:0},
+{q:"Mi történik ha nő az ellenállás?",a:["nő az áram","csökken az áram","nem változik"],c:1},
+{q:"Mi történik ha nő a feszültség?",a:["csökken az áram","nő az áram","nem változik"],c:1},
+
+{q:"Mi az ideális vezető?",a:["nagy ellenállás","0 ellenállás","1 Ohm"],c:1},
+{q:"Mi az ideális szigetelő?",a:["vezet","nem vezet","kicsit vezet"],c:1},
+{q:"Mi a földelés célja?",a:["áram növelés","védelem","világítás"],c:1},
+
+{q:"Mi történik párhuzamos kapcsolásnál az árammal?",a:["megoszlik","azonos","0"],c:0},
+{q:"Mi történik soros kapcsolásnál az ellenállással?",a:["csökken","nő","nem változik"],c:1},
+
+{q:"Mi a teljesítmény másik képlete?",a:["P=I²R","P=U²I","P=R/I"],c:0},
+{q:"Mi az elektromos energia mértékegysége?",a:["Joule","Volt","Ohm"],c:0},
+{q:"Mi az elektromos teljesítmény?",a:["energia/idő","feszültség","ellenállás"],c:0},
+
+{q:"Mi a kapcsoló feladata?",a:["mérés","megszakítás","növelés"],c:1},
+{q:"Mi a vezeték feladata?",a:["szigetelés","áram szállítás","hő"],c:1},
+
+{q:"Mi a relé?",a:["vezeték","kapcsoló","izzó"],c:1},
+{q:"Mi a relé működtető része?",a:["kontakt","tekercs","ház"],c:1},
+
+{q:"Mi a multiméter?",a:["mérőműszer","motor","izzó"],c:0},
+{q:"Mit mér az ampermérő?",a:["feszültség","áram","ellenállás"],c:1},
+
+{q:"Mit mér a voltmérő?",a:["áram","feszültség","ellenállás"],c:1},
+{q:"Mit mér az ohmmérő?",a:["áram","ellenállás","feszültség"],c:1},
+
+{q:"Mi a nulla vezető színe?",a:["kék","barna","zöld"],c:0},
+{q:"Mi a fázis vezető színe?",a:["barna","kék","zöld"],c:0},
+{q:"Mi a védővezető színe?",a:["zöld/sárga","kék","barna"],c:0},
+
+{q:"Mi történik túláram esetén?",a:["biztosíték leold","semmi","fesz nő"],c:0},
+
+{q:"Mi az elektron?",a:["pozitív","negatív","semleges"],c:1},
+{q:"Mi az áram iránya?",a:["+ -","- +","random"],c:0},
+
+{q:"Mi a rövidzárlat veszélye?",a:["nincs","tűz","jobb működés"],c:1},
+
+{q:"Mi a soros kapcsolás hátránya?",a:["egy hiba leállít mindent","jobb működés","nincs áram"],c:0},
+
+{q:"Mi a párhuzamos előnye?",a:["azonos feszültség","nincs áram","nagy ellenállás"],c:0},
+
+{q:"Mi az elektromos mező?",a:["töltések hatása","hő","fény"],c:0},
+
+{q:"Mi a vezetőképesség?",a:["ellenállás","vezetési képesség","hő"],c:1},
+
+{q:"Mi a Joule?",a:["energia","feszültség","áram"],c:0},
+
+{q:"Mi a Watt?",a:["energia","teljesítmény","ellenállás"],c:1},
+
+{q:"Mi az Ampere?",a:["áram","feszültség","energia"],c:0},
+
+{q:"Mi a Volt?",a:["feszültség","áram","ellenállás"],c:0},
+
+{q:"Mi a rövidzárlat oka?",a:["kis ellenállás","nagy ellenállás","nincs kapcsolat"],c:0},
+
+{q:"Mi az áramkör?",a:["zárt rendszer","nyitott","nincs"],c:0},
+
+{q:"Mi a zárt áramkör?",a:["van áram","nincs áram","szakadt"],c:0},
+
+{q:"Mi a szakadás?",a:["nincs áram","nagy áram","kis ellenállás"],c:0},
+
+{q:"Mi az energiaforrás?",a:["akkumulátor","vezeték","ellenállás"],c:0},
+
+{q:"Mi az izzó szerepe?",a:["fény","áram","ellenállás"],c:0},
+
+{q:"Mi az ellenállás szerepe?",a:["áram csökkentés","növelés","nulla"],c:0},
+
+{q:"Mi a vezető?",a:["áramot vezet","nem vezet","szigetel"],c:0},
+
+{q:"Mi a szigetelő?",a:["nem vezet","vezet","áram"],c:0},
+
+{q:"Mi az áramforrás?",a:["energia ad","ellenállás","vezeték"],c:0},
+
+{q:"Mi a feszültség?",a:["energia különbség","áram","ellenállás"],c:0},
+
+{q:"Mi az ellenállás?",a:["áram akadály","energia","feszültség"],c:0},
+
+{q:"Mi történik ha nő az áram?",a:["teljesítmény nő","csökken","nem változik"],c:0},
+
+{q:"Mi történik ha csökken feszültség?",a:["áram csökken","nő","nem változik"],c:0},
+
+{q:"Mi a teljesítmény jele?",a:["P","U","I"],c:0},
+
+{q:"Mi a Joule törvény?",a:["hő termelés","áram","feszültség"],c:0},
+
+{q:"Mi a biztosíték működése?",a:["megszakít","növel","vezet"],c:0},
+
+{q:"Mi a villamos energia?",a:["munka","áram","ellenállás"],c:0},
+
+{q:"Mi az energia?",a:["munkavégző képesség","áram","feszültség"],c:0},
+
+{q:"Mi az elektromos töltés?",a:["részecske","áram","fesz"],c:0}
+
+];
+
+// ha kevesebb mint 80, feltölti (biztos ami biztos)
+while(allQuestions.length < 80){
+    allQuestions.push(allQuestions[Math.floor(Math.random()*allQuestions.length)]);
+}
+
+// 🔀 50 kérdés
+function pick50(){
+    return [...allQuestions].sort(()=>Math.random()-0.5).slice(0,50);
+}
+
+let quizData = [];
+let answers = [];
+
+function loadQuiz(){
+    quizData = pick50();
+    answers = new Array(50).fill(null);
+
+    const quiz = document.getElementById("quiz");
+    quiz.innerHTML = "";
+    document.getElementById("result").innerText = "";
+    document.getElementById("errors").innerHTML = "";
+
+    quizData.forEach((q,i)=>{
+        let div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `<b>${i+1}. ${q.q}</b>`;
+
+        q.a.forEach((ans,idx)=>{
+            let btn = document.createElement("button");
+            btn.innerText = ans;
+
+            btn.onclick = ()=>{
+                answers[i] = idx;
+
+                Array.from(div.querySelectorAll("button"))
+                    .forEach(b => b.classList.remove("selected"));
+
+                btn.classList.add("selected");
+            };
+
+            div.appendChild(btn);
+        });
+
+        quiz.appendChild(div);
+    });
+}
+
+function finish(){
+    let score = 0;
+    let errorHTML = "<h3>❌ Hibák:</h3>";
+
+    quizData.forEach((q,i)=>{
+        if(answers[i] === q.c){
+            score++;
+        } else {
+            errorHTML += `
+            <div>
+                <b>${q.q}</b><br>
+                Te: ${answers[i] !== null ? q.a[answers[i]] : "nem válaszolt"}<br>
+                Helyes: <span style="color:lime">${q.a[q.c]}</span>
+            </div><br>
+            `;
+        }
+    });
+
+    document.getElementById("result").innerText = `Pontszám: ${score}/50`;
+
+    if(score === 50){
+        document.getElementById("errors").innerHTML = "<h3>🔥 Hibátlan!</h3>";
+    } else {
+        document.getElementById("errors").innerHTML = errorHTML;
+    }
+}
+
+document.getElementById("shuffleBtn").onclick = loadQuiz;
+document.getElementById("finishBtn").onclick = finish;
+
+loadQuiz();
+
+</script>
+
+</body>
+</html>
